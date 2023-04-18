@@ -59,7 +59,7 @@ class ListExercise:
         if left > right:
             return -1
 
-        mid = (left + right) >> 1
+        mid = (left + right) // 2
 
         if input_list[mid] == query:
             return mid
