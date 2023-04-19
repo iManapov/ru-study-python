@@ -1,4 +1,5 @@
-from flask import Flask
+from flask import Flask, request
+from http import HTTPStatus
 
 
 class FlaskExercise:
@@ -28,4 +29,40 @@ class FlaskExercise:
 
     @staticmethod
     def configure_routes(app: Flask) -> None:
-        pass
+        user_store: dict = {}
+
+        @app.post("/user")
+        def create_user() -> tuple[dict, HTTPStatus]:
+            if request.json.get("name"):
+                user_name = request.json["name"]
+                user_store[user_name] = {}
+                return {"data": f"User {user_name} is created!"}, HTTPStatus.CREATED
+            else:
+                return {
+                    "errors": {"name": "This field is required"}
+                }, HTTPStatus.UNPROCESSABLE_ENTITY
+
+        @app.get("/user/<name>")
+        def get_user(name: str) -> tuple[dict, HTTPStatus]:
+            if name in user_store:
+                return {"data": f"My name is {name}"}, HTTPStatus.OK
+            else:
+                return {
+                    "errors": {"name": f"User with name {name} not found"}
+                }, HTTPStatus.NOT_FOUND
+
+        @app.patch("/user/<name>")
+        def update_user(name: str) -> tuple[dict, HTTPStatus]:
+            if request.json.get("name"):
+                new_name = request.json["name"]
+                user_store[new_name] = user_store.pop(name)
+                return {"data": f"My name is {new_name}"}, HTTPStatus.OK
+            else:
+                return {
+                    "errors": {"name": "This field is required"}
+                }, HTTPStatus.UNPROCESSABLE_ENTITY
+
+        @app.delete("/user/<name>")
+        def delete_user(name: str) -> tuple[str, HTTPStatus]:
+            user_store.pop(name)
+            return "", HTTPStatus.NO_CONTENT
