@@ -1,3 +1,4 @@
+from typing import Union
 from flask import Flask, request
 from http import HTTPStatus
 
@@ -53,16 +54,25 @@ class FlaskExercise:
 
         @app.patch("/user/<name>")
         def update_user(name: str) -> tuple[dict, HTTPStatus]:
-            if request.json.get("name"):
-                new_name = request.json["name"]
-                user_store[new_name] = user_store.pop(name)
-                return {"data": f"My name is {new_name}"}, HTTPStatus.OK
-            else:
+            if name not in user_store:
+                return {
+                    "errors": {"name": f"User with name {name} not found"}
+                }, HTTPStatus.NOT_FOUND
+
+            if "name" not in request.json:
                 return {
                     "errors": {"name": "This field is required"}
                 }, HTTPStatus.UNPROCESSABLE_ENTITY
 
+            new_name = request.json["name"]
+            user_store[new_name] = user_store.pop(name)
+            return {"data": f"My name is {new_name}"}, HTTPStatus.OK
+
         @app.delete("/user/<name>")
-        def delete_user(name: str) -> tuple[str, HTTPStatus]:
+        def delete_user(name: str) -> tuple[Union[str, dict], HTTPStatus]:
+            if name not in user_store:
+                return {
+                    "errors": {"name": f"User with name {name} not found"}
+                }, HTTPStatus.NOT_FOUND
             user_store.pop(name)
             return "", HTTPStatus.NO_CONTENT
